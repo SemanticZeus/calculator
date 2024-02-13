@@ -1,16 +1,15 @@
 %{
 	#include <stdio.h>
-	#include <stdlibh>
+	#include <stdlib.h>
 	#include <stdarg.h>
 	#include "calc.h"
 
 	nodeType *opr(int opr, int nops, ...);
 	nodeType *id(int i);
 	nodeType *con(int value);
-	void freeNode *con(int value);
+	void freeNode(nodeType *n);
 	int ex(nodeType *p);
 	int yylex(void);
-
 
 	void yyerror(char *);
 	int sym[26];
@@ -51,23 +50,31 @@ stmt:
 	';'			{ $$ = opr(';', 2, NULL, NULL); }
 	| expr ';'		{$$ = $1; }
 	| PRINT expr ';'	{$$ = opr(PRINT, 1, $2); }
-	| VARIABLE = expr ';'	{$$ opr('=', 2, id($1), $3); }
-	| WHILE '(' expr ')' stmt { $$ opr(WHILE, 2, $3, $5); }
+	| VARIABLE '=' expr ';'	{$$ = opr('=', 2, id($1), $3); }
+	| WHILE '(' expr ')' stmt { $$ = opr(WHILE, 2, $3, $5); }
 	| IF '(' expr ')' stmt %prec IFX { $$ = opr(IF, 2, $3, $5); }
-	| IF '(' expr ')' stmt %
+	| IF '(' expr ')' stmt ELSE stmt { $$ = opr(IF, 3, $3, $5, $7); }
+	| '{' stmt_list '}'		{ $$ = $2; }
 
-statement:
-	 expr			{ printf("%d\n", $1); }
-	| VARIABLE '=' expr	{sym[$1] = $3; }
+stmt_list:
+	 stmt			{ $$ = $1; }
+	| stmt_list stmt	{ $$ = opr(';', 2, $1, $2); }
 	;
 
 expr:
-    	INTEGER
-	| VARIABLE		{$$ = sym[$1]; }
-	| expr '+' expr		{$$ = $1+$3; }
-	| expr '-' expr		{$$ = $1-$3; }
-	| expr '*' expr		{$$ = $1*$3; }
-	| expr '/' expr		{$$ = $1/$3; }
+    	INTEGER			{$$ = con($1); }
+	| VARIABLE		{$$ = id($1); }
+	| '-' expr %prec UMINUS	{ $$ = opr(UMINUS, 1, $2); }
+	| expr '+' expr		{$$ = opr('+', 2, $1, $3); }
+	| expr '-' expr		{$$ = opr('-', 2, $1, $3); }
+	| expr '*' expr		{$$ = opr('*', 2, $1, $3); }
+	| expr '/' expr		{$$ = opr('/', 2, $1, $3); }
+	| expr '<' expr		{$$ = opr('<', 2, $1, $3); }
+	| expr '>' expr		{$$ = opr('>', 2, $1, $3); }
+	| expr GE  expr		{$$ = opr(GE, 2, $1, $3); }
+	| expr LE  expr		{$$ = opr(LE, 2, $1, $3); }
+	| expr NE  expr		{$$ = opr(NE, 2, $1, $3); }
+	| expr EQ  expr		{$$ = opr(EQ, 2, $1, $3); }	
 	| '(' expr ')'		{$$ = $2; }
 	;
 
@@ -79,7 +86,7 @@ nodeType *con(int value) {
 	nodeType *p;
 
 	/* allocate node */
-	if ((p = malloc(sizeof(nodeType)) == NULL)
+	if ((p = malloc(sizeof(nodeType))) == NULL)
 		yyerror("out of memory");
 
 	/* copy information */
@@ -120,10 +127,10 @@ nodeType *opr(int oper, int nops, ...) {
 	return p;
 }
 
-nodeType *freeNode(nodeType *p) {
+void freeNode(nodeType *p) {
 	if (!p) return;
 	if (p->type == typeOpr) {
-		for (i=0;i<p->opr.nops;i++)
+		for (int i=0;i<p->opr.nops;i++)
 			freeNode(p->opr.op[i]);
 		free(p->opr.op);
 	}

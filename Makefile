@@ -1,7 +1,7 @@
-all: calc.exe
+all: calc
 
-calc.exe : lex.yy.calc.c y.tab.c
-	gcc -o $@ $^ -L/usr/lib -lfl -ly
+calc : lex.yy.calc.c y.tab.c calc_interpreter.c
+	gcc -o $@ $^   -ly -g
 
 
 lex.yy.calc.c: calc.l
@@ -13,7 +13,7 @@ y.tab.c: calc.y
 .PHONY: clean
 
 clean:
-	rm y.tab.c y.tab.h lex.yy.calc.c calc.exe
+	rm y.tab.c y.tab.h lex.yy.calc.c calc
 
 
 

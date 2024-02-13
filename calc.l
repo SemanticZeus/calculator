@@ -7,7 +7,7 @@
 
 %%
 [a-z]	{
-		yylval = *yytext - 'a';
+		yylval.sIndex = *yytext - 'a';
 		return VARIABLE;
 	}
 
@@ -17,7 +17,7 @@
 	}
 
 [1-9][0-9]* 	{
-			yylval = atoi(yytext);
+			yylval.iValue = atoi(yytext);
 			return INTEGER;
 		}
 
