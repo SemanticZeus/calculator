@@ -1,4 +1,4 @@
-typedef enum {typeCon, typeId, typeId, typeOpr } nodeEnum;
+typedef enum {typeCon, typeId, typeOpr } nodeEnum;
 
 /* constants */
 typedef struct {
@@ -28,3 +28,4 @@ typedef struct nodeTypeTag {
 } nodeType;
 
 extern int sym[26];
+
